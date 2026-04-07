@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prémiový Konfigurátor - Textilstar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #c62828; 
+            --primary-hover: #b71c1c;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+            --radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .config-main { flex: 1; display: flex; flex-direction: column; gap: 30px; }
+
+        .step-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid #f1f5f9;
+        }
+
+        .step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .step-number { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .step-title { font-size: 20px; font-weight: 700; margin: 0; }
+
+        /* Prepínače a Karty */
+        .type-selector { display: flex; gap: 15px; background: #f1f5f9; padding: 8px; border-radius: 12px; }
+        .type-btn { flex: 1; text-align: center; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; color: var(--text-muted); }
+        .type-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        .visual-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .option-card { border: 2px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: 0.2s; position: relative; }
+        .option-card:hover { border-color: #cbd5e1; }
+        .option-card.active { border-color: var(--primary); background: #fff5f5; }
+        .option-card.active::after {
+            content: "✓"; position: absolute; top: 10px; right: 10px; background: var(--primary); color: white;
+            width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;
+        }
+        .option-title { font-weight: 600; margin-bottom: 5px; display: block; }
+        .option-desc { font-size: 12px; color: var(--text-muted); }
+
+        /* Galéria */
+        .material-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto; padding: 10px 5px; }
+        .material-item { border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: 0.2s; position: relative; }
+        .material-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
+        .material-name { padding: 8px; text-align: center; font-size: 12px; font-weight: 600; background: #f8fafc; }
+        .material-item.selected { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(198,40,40,0.2); }
+        .material-item.selected .material-name { background: var(--primary); color: white; }
+        .material-item .zoom-icon {
+            position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; width: 24px; height: 24px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; font-size: 14px;
+        }
+        .material-item:hover .zoom-icon { opacity: 1; }
+
+        /* Inputy */
+        .input-group { display: flex; gap: 20px; }
+        .input-box { flex: 1; }
+        .input-box label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        .input-wrapper { position: relative; }
+        .input-wrapper input, .input-wrapper select, textarea {
+            width: 100%; padding: 15px 40px 15px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; font-family: inherit; background: #f8fafc; transition: 0.2s; box-sizing: border-box;
+        }
+        textarea { padding: 15px; resize: vertical; }
+        .input-wrapper input:focus, .input-wrapper select:focus, textarea:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1); }
+        .input-suffix { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600; pointer-events: none; }
+
+        /* Sidebar - Košík */
+        .summary-sidebar { width: 380px; flex-shrink: 0; position: sticky; top: 40px; }
+        .summary-card { background: var(--card); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--primary); }
+        .summary-title { font-size: 18px; font-weight: 700; margin-top: 0; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; color: var(--text-muted); }
+        .summary-row span:last-child { font-weight: 600; color: var(--text-main); }
+        
+        .summary-total { margin-top: 25px; padding-top: 20px; border-top: 2px dashed var(--border); text-align: right; }
+        .total-label { font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 5px; }
+        .total-price { font-size: 32px; font-weight: 700; color: var(--primary); }
+
+        .btn-submit { display: block; width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 25px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3); }
+        .btn-submit:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(198, 40, 40, 0.4); }
+
+        /* Error Box Validácie */
+        .error-box { background: #fef2f2; border-left: 4px solid var(--error); color: #991b1b; padding: 15px; border-radius: 6px; margin-top: 20px; font-size: 14px; display: none; }
+        .error-box ul { margin: 5px 0 0; padding-left: 20px; }
+
+        .trust-badges { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .trust-badge { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); }
+        .trust-badge svg { width: 18px; height: 18px; color: var(--success); }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .modal img { max-width: 90%; max-height: 90vh; border-radius: 8px; }
+        .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; }
+
+        @media (max-width: 992px) {
+            .container { flex-direction: column; }
+            .summary-sidebar { width: 100%; position: static; }
+            .input-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<form action="https://formspree.io/f/VÁŠ_KÓD" method="POST" id="mainForm">
+<div class="container">
+    
+    <div class="config-main" id="configuratorSteps">
+        
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <h2 class="step-title">Čo pre vás ušijeme?</h2>
+            </div>
+            <div class="type-selector">
+                <div class="type-btn active" id="tab-zavesy" onclick="setMode('zavesy')">Dizajnové Závesy</div>
+                <div class="type-btn" id="tab-zaclony" onclick="setMode('zaclony')">Elegantné Záclony</div>
+            </div>
+            <input type="hidden" name="Typ_Produktu" id="hiddenType" value="Závesy">
+        </div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <h2 class="step-title">Vyberte si vysnívaný materiál</h2>
+            </div>
+            <p style="font-size: 14px; color: var(--text-muted); margin-top: -10px;">Kliknutím na obrázok vpravo hore si ho zväčšíte.</p>
+            <div class="material-gallery" id="gallery"></div>
+            <input type="hidden" name="Vybrany_Material" id="hiddenMaterial" value="">
+            
+            <div id="zavesyWidthOptions" style="margin-top: 20px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">Šírka zvolenej látky z eshopu</label>
+                <div class="input-wrapper">
+                    <select id="zavesyFabricWidth" name="Sirka_Latky_Eshop" onchange="calculate()">
+                        <option value="150">Šírka materiálu: 140 - 150 cm</option>
+                        <option value="280" selected>Šírka materiálu: 280 cm</option>
+                        <option value="300">Šírka materiálu: 300 cm</option>
+                        <option value="320">Šírka materiálu: 320 cm</option>
+                        <option value="360">Šírka materiálu: 360 cm</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <h2 class="step-title">Rozmery vášho okna</h2>
+            </div>
+            <div class="input-group">
+                <div class="input-box">
+                    <label>Celková šírka koľajničky / garniže</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="inputWidth" name="Sirka_Garnize_cm" placeholder="napr. 200" oninput="calculate()">
+                        <span class="input-suffix">cm</span>
+                    </div>
+                </div>
+                <div class="input-box">
+                    <label>Požadovaná výška textílie</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="inputHeight" name="Vyska_Textilie_cm" placeholder="napr. 250" oninput="calculate()">
+                        <span class="input-suffix">cm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <h2 class="step-title">Prevedenie a Riasenie</h2>
+            </div>
+            
+            <label style="font-weight: 600; display: block; margin-bottom: 10px;">Spôsob uchytenia (Páska)</label>
+            <div class="visual-options" style="margin-bottom: 25px;">
+                <div class="option-card tape-option" onclick="setTape('5-rovne', this)">
+                    <span class="option-title">5cm Páska</span><span class="option-desc">Rovné riasenie</span>
+                </div>
+                <div class="option-card tape-option" onclick="setTape('5-zabkove', this)">
+                    <span class="option-title">5cm Žabkové</span><span class="option-desc">Len pre husté riasenie</span>
+                </div>
+                <div class="option-card tape-option" onclick="setTape('10-rovne', this)">
+                    <span class="option-title">10cm Premium</span><span class="option-desc">Široká páska (1:2)</span>
+                </div>
+                <div class="option-card tape-option" onclick="setTape('ziadna', this)">
+                    <span class="option-title">Bez pásky</span><span class="option-desc">Tunel / obšitie</span>
+                </div>
+            </div>
+            <input type="hidden" id="tapeType" name="Typ_Pasky" value="">
+
+            <label style="font-weight: 600; display: block; margin-bottom: 10px;">Bohatosť riasenia</label>
+            <div class="visual-options">
+                <div class="option-card ratio-option" id="card-ratio-1-5" onclick="setRatio('1.5', this)">
+                    <span class="option-title">Jemné riasenie (1 : 1,5)</span><span class="option-desc">Moderný, ľahký vzhľad.</span>
+                </div>
+                <div class="option-card ratio-option" id="card-ratio-2" onclick="setRatio('2', this)">
+                    <span class="option-title">Husté riasenie (1 : 2)</span><span class="option-desc">Bohatý a luxusný vzhľad.</span>
+                </div>
+            </div>
+            <input type="hidden" id="ratio" name="Riasenie" value="">
+        </div>
+    </div>
+
+    <div class="config-main" id="contactStep" style="display: none;">
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <h2 class="step-title">Kontaktné údaje k objednávke</h2>
+            </div>
+            <p style="color: var(--text-muted); margin-top: -10px; margin-bottom: 25px;">Údaje úspešne vypočítané! Vyplňte prosím vaše kontaktné údaje. Každú objednávku si s vami ešte potvrdíme telefonicky.</p>
+            
+            <div class="input-group" style="margin-bottom: 20px;">
+                <div class="input-box"><label>Meno a Priezvisko</label><input type="text" name="Meno" required></div>
+                <div class="input-box"><label>Telefón</label><input type="tel" name="Telefon" required></div>
+            </div>
+            <div class="input-box" style="margin-bottom: 20px;"><label>E-mail</label><input type="email" name="Email" required></div>
+            <div class="input-box" style="margin-bottom: 20px;"><label>Dodacia adresa / Poznámka pre nás</label><textarea name="Poznamka" rows="4"></textarea></div>
+            
+            <button type="button" class="btn-submit" style="background:#475569; margin-bottom:10px;" onclick="backToConfig()">Zmeniť konfiguráciu</button>
+            <button type="submit" class="btn-submit" style="margin-top:0;">Odoslať záväznú objednávku</button>
+        </div>
+    </div>
+
+    <div class="summary-sidebar">
+        <div class="summary-card">
+            <h3 class="summary-title">Zhrnutie konfigurácie</h3>
+            
+            <div class="summary-row"><span>Produkt:</span><span id="sumType">Dizajnové Závesy</span></div>
+            <div class="summary-row"><span>Vybraný vzor:</span><span id="sumMaterial">Nevybraný</span></div>
+            <div class="summary-row" style="border-bottom: 1px solid var(--border); padding-bottom: 15px;"><span>Zadaný rozmer:</span><span id="sumSize">Nevyplnené</span></div>
+            
+            <div id="sumDetailsBlock" style="margin-top: 15px;">
+                <span style="color:var(--text-muted); font-size:13px;">Vyplňte všetky povinné kroky pre výpočet.</span>
+            </div>
+
+            <div class="summary-total">
+                <span class="total-label">Odhadovaná cena šitia</span>
+                <div class="total-price" id="totalPriceDisplay">0.00 €</div>
+                <input type="hidden" name="Celkova_Cena_Sitia" id="hiddenPrice" value="0">
+                <input type="hidden" name="Detaily_Vypoctu" id="hiddenDetails" value="">
+            </div>
+
+            <div id="errorBox" class="error-box">
+                <b>Chýbajúce údaje:</b>
+                <ul id="errorList"></ul>
+            </div>
+
+            <button type="button" id="btnContinue" class="btn-submit" onclick="validateAndProceed()">Pokračovať k objednávke</button>
+
+            <div class="trust-badges">
+                <div class="trust-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Každú objednávku telefonicky overujeme</div>
+                <div class="trust-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Garancia 100% presnosti na mieru</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</form>
+
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="close-modal">&times;</span>
+    <img id="modalImage" src="" alt="Zväčšený náhľad">
+</div>
+
+<script>
+    let mode = 'zavesy';
+    const matrixZavesy = {
+        150: { 150: 25, 280: 30, 300: 32, 320: 35, 360: 40 },
+        200: { 150: 30, 280: 35, 300: 38, 320: 41, 360: 45 },
+        250: { 150: 32, 280: 37, 300: 40, 320: 45, 360: 47 },
+        300: { 150: 35, 280: 39, 300: 42, 320: 48, 360: 0 } 
+    };
+
+    // FUNKCIA PRE ODZNACENIE / OZNACENIE (TOGGLE)
+    function setTape(value, element) {
+        let input = document.getElementById('tapeType');
+        const card15 = document.getElementById('card-ratio-1-5');
+
+        // Ak už je zakliknuté, tak to odklikni
+        if (element.classList.contains('active')) {
+            element.classList.remove('active');
+            input.value = '';
+            // Uvoľni obmedzenia riasenia
+            card15.style.opacity = '1';
+            card15.style.pointerEvents = 'auto';
+        } else {
+            // Zruš ostatné, označ toto
+            document.querySelectorAll('.tape-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            input.value = value;
+
+            // Obmedzenie riasenia
+            if (value === '5-zabkove' || value === '10-rovne') {
+                card15.style.opacity = '0.4';
+                card15.style.pointerEvents = 'none';
+                if(document.getElementById('ratio').value === '1.5') {
+                    setRatio('2', document.getElementById('card-ratio-2')); // Vynúť 1:2
+                }
+            } else {
+                card15.style.opacity = '1';
+                card15.style.pointerEvents = 'auto';
+            }
+        }
+        calculate();
+    }
+
+    function setRatio(value, element) {
+        let input = document.getElementById('ratio');
+        if (element.classList.contains('active')) {
+            element.classList.remove('active');
+            input.value = '';
+        } else {
+            document.querySelectorAll('.ratio-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            input.value = value;
+        }
+        calculate();
+    }
+
+    // Modal a Galéria
+    function openImageModal(src) { document.getElementById('modalImage').src = src; document.getElementById('imageModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('imageModal').style.display = 'none'; document.getElementById('modalImage').src = ''; }
+
+    function loadGallery() {
+        const gallery = document.getElementById('gallery');
+        gallery.innerHTML = '';
+        let folder = mode === 'zavesy' ? '2' : '1';
+        let count = mode === 'zavesy' ? 36 : 20;
+
+        for (let i = 1; i <= count; i++) {
+            let div = document.createElement('div');
+            div.className = 'material-item';
+            div.onclick = () => selectMaterial(div, i);
+            
+            let img = document.createElement('img');
+            img.src = `${folder}/${i}.webp`; 
+            img.loading = "lazy";
+            img.onerror = function() { this.style.display = 'none'; };
+
+            let zoomIcon = document.createElement('div');
+            zoomIcon.className = 'zoom-icon';
+            zoomIcon.innerHTML = '⛶';
+            zoomIcon.onclick = (e) => { e.stopPropagation(); selectMaterial(div, i); openImageModal(img.src); };
+
+            let nameDiv = document.createElement('div');
+            nameDiv.className = 'material-name';
+            nameDiv.innerText = `Vzor ${i}`;
+
+            div.appendChild(img); div.appendChild(zoomIcon); div.appendChild(nameDiv); gallery.appendChild(div);
+        }
+        document.getElementById('sumMaterial').innerText = "Nevybraný";
+        document.getElementById('hiddenMaterial').value = "";
+    }
+
+    function selectMaterial(element, index) {
+        document.querySelectorAll('.material-item').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        let prefix = mode === 'zavesy' ? 'Záves' : 'Záclona';
+        let materialName = `${prefix} - Vzor č. ${index}`;
+        document.getElementById('sumMaterial').innerText = materialName;
+        document.getElementById('hiddenMaterial').value = materialName;
+        document.getElementById('errorBox').style.display = 'none'; // Schová chybu ak je
+    }
+
+    function setMode(newMode) {
+        mode = newMode;
+        document.getElementById('tab-zavesy').classList.toggle('active', mode === 'zavesy');
+        document.getElementById('tab-zaclony').classList.toggle('active', mode === 'zaclony');
+        document.getElementById('sumType').innerText = mode === 'zavesy' ? 'Dizajnové Závesy' : 'Elegantné Záclony';
+        document.getElementById('hiddenType').value = mode === 'zavesy' ? 'Závesy' : 'Záclony';
+        document.getElementById('zavesyWidthOptions').style.display = (mode === 'zavesy') ? 'block' : 'none';
+        
+        loadGallery();
+        calculate();
+    }
+
+    function getBasePriceZaves(h, wKey) {
+        if (h <= 150) return matrixZavesy[150][wKey];
+        if (h <= 200) return matrixZavesy[200][wKey];
+        if (h <= 250) return matrixZavesy[250][wKey];
+        if (h <= 300) return matrixZavesy[300][wKey];
+        return null;
+    }
+    function getTapeSurcharge(w) { return w <= 250 ? 8 : (w <= 300 ? 10 : 12); }
+
+    function calculate() {
+        // Skryje chybový box pri zmene
+        document.getElementById('errorBox').style.display = 'none';
+
+        const width = parseFloat(document.getElementById('inputWidth').value) || 0;
+        const height = parseFloat(document.getElementById('inputHeight').value) || 0;
+        const ratio = parseFloat(document.getElementById('ratio').value);
+        const tapeType = document.getElementById('tapeType').value;
+        const hasTape = tapeType !== 'ziadna' && tapeType !== '';
+
+        if (width > 0 && height > 0) {
+            document.getElementById('sumSize').innerText = `${width} cm šírka × ${height} cm výška`;
+        } else {
+            document.getElementById('sumSize').innerText = "Nevyplnené";
+        }
+
+        let detailsHtml = '';
+        let totalPrice = 0;
+
+        // Ak chýba hocijaký parameter, nevykresluj výpočet
+        if (width === 0 || height === 0 || isNaN(ratio) || tapeType === '') {
+            document.getElementById('sumDetailsBlock').innerHTML = '<span style="color:var(--text-muted); font-size:13px;">Pre výpočet ceny vyplňte všetky kroky (rozmery, pásku aj riasenie).</span>';
+            document.getElementById('totalPriceDisplay').innerText = "0.00 €";
+            document.getElementById('hiddenPrice').value = "0.00 €";
+            document.getElementById('hiddenDetails').value = "Nedokončená konfigurácia";
+            return;
+        }
+
+        if (mode === 'zavesy') {
+            const fabricW = parseInt(document.getElementById('zavesyFabricWidth').value);
+            const pieceWidth = ((width / 2) * ratio) + 10;
+            const basePrice = getBasePriceZaves(height, fabricW);
+
+            if (basePrice === null || basePrice === 0) {
+                detailsHtml = `<div class="summary-row"><span style="color:red;">Neštandardný rozmer</span><span>Na vyžiadanie</span></div>`;
+            } else {
+                detailsHtml += `<div class="summary-row"><span>Spotreba materiálu:</span><span>2 ks po ${pieceWidth.toFixed(0)} cm</span></div>`;
+                detailsHtml += `<div class="summary-row"><span>Základné šitie:</span><span>${basePrice.toFixed(2)} €</span></div>`;
+                totalPrice += basePrice;
+
+                if (hasTape) {
+                    const surchargePerPiece = getTapeSurcharge(pieceWidth);
+                    const totalSurcharge = surchargePerPiece * 2; 
+                    detailsHtml += `<div class="summary-row"><span>Prišitie pásky (2 ks):</span><span>${totalSurcharge.toFixed(2)} €</span></div>`;
+                    totalPrice += totalSurcharge;
+                }
+            }
+        } else if (mode === 'zaclony') {
+            const zaclonaWidth = (width * ratio) + 10;
+            const obvodM = ((zaclonaWidth * 2) + (height * 2)) / 100;
+            
+            detailsHtml += `<div class="summary-row"><span>Šírka pred ušitím:</span><span>${zaclonaWidth.toFixed(0)} cm</span></div>`;
+            detailsHtml += `<div class="summary-row"><span>Celkový obvod lemovania:</span><span>${obvodM.toFixed(2)} m</span></div>`;
+            detailsHtml += `<div class="summary-row"><span>Cena šitia (3.50€/m):</span><span>${(obvodM * 3.50).toFixed(2)} €</span></div>`;
+            totalPrice = obvodM * 3.50;
+        }
+
+        document.getElementById('sumDetailsBlock').innerHTML = detailsHtml;
+        document.getElementById('totalPriceDisplay').innerText = totalPrice.toFixed(2) + " €";
+        
+        // Zápis pre Formspree
+        document.getElementById('hiddenPrice').value = totalPrice.toFixed(2) + " €";
+        document.getElementById('hiddenDetails').value = detailsHtml.replace(/<[^>]*>?/gm, ' | '); // Čistý text do emailu
+    }
+
+    // VALIDÁCIA PRED POKRAČOVANÍM (KROK 5)
+    function validateAndProceed() {
+        let errors = [];
+        
+        const material = document.getElementById('hiddenMaterial').value;
+        const width = parseFloat(document.getElementById('inputWidth').value) || 0;
+        const height = parseFloat(document.getElementById('inputHeight').value) || 0;
+        const tape = document.getElementById('tapeType').value;
+        const ratio = document.getElementById('ratio').value;
+
+        if (!material) errors.push("Krok 2: Nevybrali ste si farbu/materiál zo vzorkovníka.");
+        if (width <= 0 || height <= 0) errors.push("Krok 3: Zadajte platné rozmery šírky a výšky.");
+        if (!tape) errors.push("Krok 4: Zvoľte si spôsob uchytenia (typ pásky).");
+        if (!ratio) errors.push("Krok 4: Zvoľte si bohatosť riasenia.");
+
+        if (errors.length > 0) {
+            // Zobraz chyby
+            const errorList = document.getElementById('errorList');
+            errorList.innerHTML = '';
+            errors.forEach(err => {
+                let li = document.createElement('li');
+                li.innerText = err;
+                errorList.appendChild(li);
+            });
+            document.getElementById('errorBox').style.display = 'block';
+            
+            // Posuň obrazovku k chybe
+            document.getElementById('errorBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            // Všetko je OK - zobraziť kontaktný formulár
+            document.getElementById('errorBox').style.display = 'none';
+            document.getElementById('configuratorSteps').style.display = 'none';
+            document.getElementById('contactStep').style.display = 'flex';
+            document.getElementById('btnContinue').style.display = 'none'; // Schová tlačidlo pokračovať
+            
+            // Scroll hore
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    // NÁVRAT DO KONFIGURÁCIE
+    function backToConfig() {
+        document.getElementById('contactStep').style.display = 'none';
+        document.getElementById('configuratorSteps').style.display = 'flex';
+        document.getElementById('btnContinue').style.display = 'block';
+    }
+
+    window.onload = function() { setMode('zavesy'); };
+</script>
+
+</body>
+</html>
